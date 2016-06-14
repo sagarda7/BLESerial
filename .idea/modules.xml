@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/BLESerial.iml" filepath="$PROJECT_DIR$/BLESerial.iml" />
-      <module fileurl="file://$PROJECT_DIR$/bleserial/app.iml" filepath="$PROJECT_DIR$/bleserial/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/bleserial/bleserial.iml" filepath="$PROJECT_DIR$/bleserial/bleserial.iml" />
     </modules>
   </component>
 </project>

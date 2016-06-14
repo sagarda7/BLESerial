@@ -124,13 +124,14 @@ public class BluetoothLeService extends Service {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 UUID serviceUUID = characteristic.getService().getUuid();
                 UUID charUUID = characteristic.getUuid();
-
+                Log.d(TAG,charUUID.toString());
                 if (mServiceUUID.equals(serviceUUID))
                 {
-                    if (mDataAvailableUUID.equals(charUUID))
-                    {
-                        if(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8,0).intValue()==1){
-                            broadcastUpdate(ACTION_DATA_AVAILABLE_NOTIFICATION);
+                    if(mDataAvailableUUID!=null) {
+                        if (mDataAvailableUUID.equals(charUUID)) {
+                            if (characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0).intValue() == 1) {
+                                broadcastUpdate(ACTION_DATA_AVAILABLE_NOTIFICATION);
+                            }
                         }
                     }
 
@@ -147,13 +148,14 @@ public class BluetoothLeService extends Service {
                                             BluetoothGattCharacteristic characteristic) {
             UUID serviceUUID = characteristic.getService().getUuid();
             UUID charUUID = characteristic.getUuid();
-
+            Log.d(TAG,charUUID.toString());
             if (mServiceUUID.equals(serviceUUID))
             {
-                if (mDataAvailableUUID.equals(charUUID))
-                {
-                    if(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8,0).intValue()==1){
-                        broadcastUpdate(ACTION_DATA_AVAILABLE_NOTIFICATION,characteristic);
+                if(mDataAvailableUUID!=null) {
+                    if (mDataAvailableUUID.equals(charUUID)) {
+                        if (characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0).intValue() == 1) {
+                            broadcastUpdate(ACTION_DATA_AVAILABLE_NOTIFICATION, characteristic);
+                        }
                     }
                 }
 
@@ -185,8 +187,10 @@ public class BluetoothLeService extends Service {
            /* final StringBuilder stringBuilder = new StringBuilder(data.length);
             for(byte byteChar : data)
                 stringBuilder.append(byteChar);*/
-            intent.putExtra(EXTRA_DATA, new String(data)); //ready to pass value to intent
+            //intent.putExtra(EXTRA_DATA, new String(data)); //ready to pass value to intent
+            intent.putExtra(EXTRA_DATA, data); //ready to pass value to intent
         }
+        Log.d("BLESerial",data.toString()+" Received");
         sendBroadcast(intent); //passed value to BLEControl Activity
     }
 

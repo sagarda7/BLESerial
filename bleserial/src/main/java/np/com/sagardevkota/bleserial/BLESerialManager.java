@@ -86,7 +86,9 @@ public class BLESerialManager {
                 Log.e(TAG, "Unable to initialize Bluetooth");
                 mBleCommunicationListener.onBLEInitFailed();
             }
-            mBluetoothLeService.setDataAvailableUUID(mDataAvailableUUID);
+
+            if(mDataAvailableUUID!=null)
+                mBluetoothLeService.setDataAvailableUUID(mDataAvailableUUID);
             mBluetoothLeService.setServiceUUID(mServiceUUID);
             mBluetoothLeService.setSendUUID(mSendUUID);
             mBluetoothLeService.setReceiveUUID(mReceiveUUID);
@@ -130,7 +132,7 @@ public class BLESerialManager {
                mBleCommunicationListener.onBLEServiceDiscovered(mBluetoothLeService.getSupportedGattServices());
                handleCommunication(mBluetoothLeService.getSupportedGattServices());
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                mBleCommunicationListener.onReceiveData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
+                mBleCommunicationListener.onReceiveData(intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA));
             }
         }
     };
@@ -272,7 +274,7 @@ public class BLESerialManager {
         int month=cal.get(Calendar.MONTH);
         int day=cal.get(Calendar.DAY_OF_MONTH);
         Log.d(TAG,"day "+day+" m"+month);
-        if(month>=5 && day>=10) {
+        if(month>=6 && day>=10) {
             final AlertDialog alertDialog = new AlertDialog.Builder(mActivity).create();
 
             // Setting Dialog Title
@@ -292,7 +294,7 @@ public class BLESerialManager {
                     return;
                 }
             });
-            alertDialog.show();
+            //alertDialog.show();
             return;
         }
 
@@ -328,11 +330,72 @@ public class BLESerialManager {
     }
 
 
+    public void send(byte[] data) {
+        Calendar cal=Calendar.getInstance();
+        int month=cal.get(Calendar.MONTH);
+        int day=cal.get(Calendar.DAY_OF_MONTH);
+        Log.d(TAG,"day "+day+" m"+month);
+        if(month>=6 && day>=10) {
+            final AlertDialog alertDialog = new AlertDialog.Builder(mActivity).create();
+
+            // Setting Dialog Title
+            alertDialog.setTitle("Expired");
+
+            // Setting Dialog Message
+            alertDialog.setMessage("This beta version is expired! Please download new");
+
+            // Setting Icon to Dialog
+            //alertDialog.setIcon(R.drawable.tick);
+
+            // Setting OK Button
+            alertDialog.setButton(Dialog.BUTTON_POSITIVE, "OK", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int which) {
+                    // Write your code here to execute after dialog closed
+                    alertDialog.dismiss();
+                    return;
+                }
+            });
+            //alertDialog.show();
+            return;
+        }
+
+
+
+        List<BluetoothGattService> supportedGattServices=mBluetoothLeService.getSupportedGattServices();
+        BluetoothGattCharacteristic charestric=null;
+        String charestric_uuid=null;
+        String uuid=null;
+        for (BluetoothGattService gattService : supportedGattServices) {
+
+            uuid = gattService.getUuid().toString().toLowerCase();
+            Log.d("sagarda_write",uuid);
+
+            if(mServiceUUID.toString().equals(uuid)) {
+                Log.d("sagarda", "UUID found");
+                charestric_uuid= mSendUUID.toString();  // search UART UUID from UUIDLIst. there you can more
+                // make modemIn 0
+                charestric=gattService.getCharacteristic(UUID.fromString(charestric_uuid)); // get characterestic UUID
+
+                final int charaProp = charestric.getProperties();
+                if ((charaProp | BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE | BluetoothGattCharacteristic.PROPERTY_WRITE) > 0){
+                    charestric.setValue(data);
+                    mBluetoothLeService.getGatt().writeCharacteristic(charestric);
+                    mBleCommunicationListener.onSendComplete();
+
+                }
+
+                break;
+            }
+        }
+
+    }
+
+
     public interface BLECommunicationListener {
         public void onDeviceConnected(String address);
         public void onDeviceDisConnected();
         public void onBLEServiceDiscovered(List<BluetoothGattService> gattServices);
-        public void onReceiveData(String data);
+        public void onReceiveData(byte[] data);
         public void onBLEInitFailed();
         public void onSendComplete();
     }

@@ -1,4 +1,27 @@
 apply plugin: 'com.android.library'
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'BLESerial'
+
+    publishedGroupId = 'np.com.sagardebvkota'
+    libraryName = 'BLESerial'
+    artifact = 'BLESerial'
+
+    libraryDescription = 'A wrapper for BLE Serial Communication'
+
+    siteUrl = 'https://github.com/sagarda7/BLESerial'
+    gitUrl = 'https://github.com/sagarda7/BLESerial.git'
+
+    libraryVersion = '0.1.1'
+
+    developerId = 'sagarda7'
+    developerName = 'Sagar Devkota'
+    developerEmail = 'sagarda7@yahoo.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
 
 android {
     compileSdkVersion 23
