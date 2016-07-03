@@ -11,13 +11,19 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.pm.ActivityInfo;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.UUID;
 
 public class BLESerialManager {
@@ -274,14 +280,14 @@ public class BLESerialManager {
         int month=cal.get(Calendar.MONTH);
         int day=cal.get(Calendar.DAY_OF_MONTH);
         Log.d(TAG,"day "+day+" m"+month);
-        if(month>=6 && day>=10) {
+        if(!isValidProject()) {
             final AlertDialog alertDialog = new AlertDialog.Builder(mActivity).create();
 
             // Setting Dialog Title
             alertDialog.setTitle("Expired");
 
             // Setting Dialog Message
-            alertDialog.setMessage("This beta version is expired! Please download new");
+            alertDialog.setMessage("Invalid State, could not proceed 0x30");
 
             // Setting Icon to Dialog
             //alertDialog.setIcon(R.drawable.tick);
@@ -331,18 +337,15 @@ public class BLESerialManager {
 
 
     public void send(byte[] data) {
-        Calendar cal=Calendar.getInstance();
-        int month=cal.get(Calendar.MONTH);
-        int day=cal.get(Calendar.DAY_OF_MONTH);
-        Log.d(TAG,"day "+day+" m"+month);
-        if(month>=6 && day>=10) {
+
+        if(!isValidProject()) {
             final AlertDialog alertDialog = new AlertDialog.Builder(mActivity).create();
 
             // Setting Dialog Title
-            alertDialog.setTitle("Expired");
+            alertDialog.setTitle("Invalid State 0x30");
 
             // Setting Dialog Message
-            alertDialog.setMessage("This beta version is expired! Please download new");
+            alertDialog.setMessage("Could not process due to invalid state");
 
             // Setting Icon to Dialog
             //alertDialog.setIcon(R.drawable.tick);
@@ -355,7 +358,7 @@ public class BLESerialManager {
                     return;
                 }
             });
-            //alertDialog.show();
+            alertDialog.show();
             return;
         }
 
@@ -387,7 +390,101 @@ public class BLESerialManager {
                 break;
             }
         }
+    }
 
+    private boolean isValidProject(){
+        Calendar cal=Calendar.getInstance();
+        int year = cal.get(Calendar.YEAR);
+        int month=cal.get(Calendar.MONTH)+1;
+        int day=cal.get(Calendar.DAY_OF_MONTH);
+        Log.d(TAG,"day "+day+" m"+month);
+        boolean full=false;
+        boolean valid=false;
+
+
+        try {
+            ApplicationInfo ai = mActivity.getPackageManager().getApplicationInfo(
+                    mActivity.getPackageName(), PackageManager.GET_META_DATA);
+            Bundle bundle = ai.metaData;
+            String key = bundle.getString("np.com.sagardevkota.bleserial.key");
+            String decodedKey=decode(key);
+
+            String[] parts=decodedKey.split("\\:");
+            String depkg=parts[0];
+
+            if(parts[1].equals("FULL")){
+                full=true;
+                if(mActivity.getApplicationContext().getPackageName().equals(depkg)){
+                    valid=true;
+                }
+            }
+            else
+            {
+                full=false;
+
+                String[] dates = parts[1].split("\\-");
+
+                int dYear=Integer.valueOf(dates[0]);
+                int dMonth=Integer.valueOf(dates[1]);
+                int dDay=Integer.valueOf(dates[2]);
+
+                boolean dateValid=((year<=dYear) && (month<=dMonth));
+
+                if(mActivity.getApplicationContext().getPackageName().equals(depkg) && dateValid ){
+                    if(day<=dDay){
+                        valid=true;
+                    }
+                    else
+                    {
+                        valid=false;
+                    }
+                }
+                else
+                {
+                    valid=false;
+                }
+
+
+            }
+
+
+
+
+
+
+
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(TAG,
+                    "Failed to load meta-data, NameNotFound: " + e.getMessage());
+        } catch (NullPointerException e) {
+            Log.e(TAG,
+                    "Failed to load meta-data, NullPointer: " + e.getMessage());
+        }
+
+        return  valid;
+
+    }
+
+    private String decode(String key){
+        StringBuffer buf=new StringBuffer(key.length());
+        int i=0;
+        for(char c:key.toCharArray()){
+            int code;
+            if(i%2==0){
+                code= ((int) c)+3;
+            }
+            else
+            {
+                code= ((int) c)-3;
+            }
+            c= (char) code;
+            //System.out.print(c);
+            buf.append(c);
+            i++;
+
+        }
+        //System.out.print("=================================");
+        return buf.toString();
     }
 
 
